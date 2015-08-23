@@ -2,9 +2,9 @@
 A prototype of type specialization for Java 10
 
 The prototype is composed of two files:
- - Dumper, that use ASM to create create three java classes,
-   ArrayList which is a prototype of specializable ArrayList, Test that tests the ArrayList of Object
-   and Test2 that tests the ArrayList of long.
+ - Dumper, that uses ASM to create create three java classes,
+   ArrayList which is a prototype of a specializable ArrayList, Test that tests the ArrayList<Object>
+   and Test2 that tests the ArrayList<long>.
  - SpecializMetaFactory which contains the bootstrap methods that does the bridging between the code
    and a variant (a specialization) of the specializable class.
    - indy creates the different variants of the specializable class on the fly and redirect call
@@ -14,14 +14,14 @@ The prototype is composed of two files:
      
 The prototype is based on several ideas
   - class like ArrayList<int> are not denotable directly in bytecode, i.e. there is no classloader
-    that stores a representation of ArrayList<int> that why every method has to be accessed using
-    invokedynamic.
+    that stores a representation of ArrayList<int> that why every methods of ArrayList<int>
+    must be accessed using invokedynamic.
   - the specialization is done by patching several constant pool entries (practically there are all
     grouped together at the start of the constant pool) so there is no bytecode rewriting at runtime :)
   - while specializing instruction like getfield or invokedynamic is easy because these opcodes
     use the constant pool, it's harder for opcodes like aload, iload or freturn.
     Here, i use a trick, i generate a cascade of if/else that tests what is the current variant
-    and do the appropriate variant of load, store or return.
+    and do the appropriate variant of load, store or return. This bytecode is not safe, but who cares :)
 
 ## How to compile it
 Just compiles the two files (with ASM as a dependency for Dumper.java)

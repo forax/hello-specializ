@@ -25,7 +25,7 @@ The prototype is based on several ideas
 
 If you are curious about what the u-opcodes are, you can look at this video
   https://www.youtube.com/watch?v=SPhJs4KpJBM
-If you found that the last part use to many interfaces, you are not alone !
+If you found that the last part use too many interfaces, you are not alone !
 
 ## How to compile it
 Just compiles the two files (with ASM as a dependency for Dumper.java)

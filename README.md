@@ -23,6 +23,10 @@ The prototype is based on several ideas
     Here, i use a trick, i generate a cascade of if/else that tests what is the current variant
     and do the appropriate variant of load, store or return. This bytecode is not safe, but who cares :)
 
+If you are curious about what the u-opcodes are, you can look at this video
+  https://www.youtube.com/watch?v=SPhJs4KpJBM
+If you found that the last part use to many interfaces, you are not alone !
+
 ## How to compile it
 Just compiles the two files (with ASM as a dependency for Dumper.java)
 ```

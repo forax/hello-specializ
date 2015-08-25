@@ -57,6 +57,15 @@ public class Dumper {
       mv.visitInsn(RETURN);
       mv.visitMaxs(3, 1);
       mv.visitEnd();
+    }    
+    {
+      mv = cw.visitMethod(ACC_PUBLIC, "size", "()I", null, null);
+      mv.visitCode();
+      mv.visitVarInsn(ALOAD, 0);
+      mv.visitFieldInsn(GETFIELD, "specializ/java/util/ArrayList", "size", "I");
+      mv.visitInsn(IRETURN);
+      mv.visitMaxs(1, 1);
+      mv.visitEnd();
     }
     {
       mv = cw.visitMethod(ACC_PUBLIC, "add", "$(E)V", "(TE;)V", null);
@@ -276,15 +285,14 @@ public class Dumper {
     mv.visitInsn(ARETURN);
   }
   
+  private static final Handle INDY = new Handle(H_INVOKESTATIC, "specializ/java/util/SpecializMetaFactory", "indy",
+      "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/invoke/CallSite;");
+  
   public static byte[] dumpTest() {
     ClassWriter cw = new ClassWriter(0);
     MethodVisitor mv;
 
-    Handle INDY = new Handle(H_INVOKESTATIC, "specializ/java/util/SpecializMetaFactory", "indy",
-        "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/invoke/CallSite;");
-    
     cw.visit(V1_8, ACC_PUBLIC | ACC_SUPER, "specializ/Test", null, "java/lang/Object", null);
-
     {
       mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
       mv.visitCode();
@@ -319,11 +327,7 @@ public class Dumper {
     ClassWriter cw = new ClassWriter(0);
     MethodVisitor mv;
 
-    Handle INDY = new Handle(H_INVOKESTATIC, "specializ/java/util/SpecializMetaFactory", "indy",
-        "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/invoke/CallSite;");
-    
     cw.visit(V1_8, ACC_PUBLIC | ACC_SUPER, "specializ/Test2", null, "java/lang/Object", null);
-
     {
       mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
       mv.visitCode();
@@ -354,9 +358,50 @@ public class Dumper {
     return cw.toByteArray();
   }
   
+  public static byte[] dumpTestJIT() {
+    ClassWriter cw = new ClassWriter(0);
+    MethodVisitor mv;
+
+    cw.visit(V1_8, ACC_PUBLIC | ACC_SUPER, "specializ/TestJIT", null, "java/lang/Object", null);
+    {
+      mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
+      mv.visitCode();
+      mv.visitInvokeDynamicInsn("new", "()Ljava/lang/Object;", INDY, "specializ/java/util/ArrayList", "I"); 
+      mv.visitVarInsn(ASTORE, 1);
+      mv.visitInsn(ICONST_0);
+      mv.visitVarInsn(ISTORE, 2);
+      Label l0 = new Label();
+      mv.visitLabel(l0);
+      mv.visitFrame(F_APPEND, 2, new Object[] { "java/lang/Object", INTEGER }, 0, null);
+      mv.visitVarInsn(ILOAD, 2);
+      mv.visitLdcInsn(100_000);
+      Label l1 = new Label();
+      mv.visitJumpInsn(IF_ICMPGE, l1);
+      mv.visitVarInsn(ALOAD, 1);
+      mv.visitVarInsn(ILOAD, 2);
+      mv.visitInvokeDynamicInsn("add", "(Ljava/lang/Object;I)V", INDY, "specializ/java/util/ArrayList", "I"); 
+      mv.visitIincInsn(2, 1);
+      mv.visitJumpInsn(GOTO, l0);
+      mv.visitLabel(l1);
+      mv.visitFrame(F_CHOP, 1, null, 0, null);
+      mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+      mv.visitVarInsn(ALOAD, 1);
+      mv.visitInvokeDynamicInsn("size", "(Ljava/lang/Object;)I", INDY, "specializ/java/util/ArrayList", "I"); 
+      mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+      mv.visitInsn(RETURN);
+      mv.visitMaxs(2, 3);
+      mv.visitEnd();
+    }
+    cw.visitEnd();
+
+    return cw.toByteArray();
+  }
+
+  
   public static void main(String[] args) throws IOException {
     Files.write(Paths.get("classes/specializ/java/util/ArrayList.class"), dumpArrayList());
     Files.write(Paths.get("classes/specializ/Test.class"), dumpTest());
     Files.write(Paths.get("classes/specializ/Test2.class"), dumpTest2());
+    Files.write(Paths.get("classes/specializ/TestJIT.class"), dumpTestJIT());
   }
 }

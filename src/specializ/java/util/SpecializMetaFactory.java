@@ -1,6 +1,5 @@
 package specializ.java.util;
 
-import static java.lang.invoke.MethodHandles.publicLookup;
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
@@ -15,7 +14,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -36,45 +34,94 @@ public class SpecializMetaFactory {
     }
   }
   
-  private static final MethodHandle newArrayInstance,
-                                    arrayGets[], arraySets[], arrayCopyOfs[], equals[];
+  private static final MethodHandle[] newArrayInstances,
+                                      arrayGets, arraySets, arrayCopyOfs, equals;
   static {
-    newArrayInstance = findStatic(Array.class, "newInstance", Object.class, Class.class, int.class);
-    
+    Lookup lookup = MethodHandles.lookup();
     VariantKind[] kinds = VariantKind.values();
-    String[] arrayGetName = { "get", "getInt", "getLong", "getFloat", "getDouble" };
+    String[] newInstanceNames = { "newInstanceObject", "newInstanceInt", "newInstanceLong", "newInstanceFloat", "newInstanceDouble" };
+    newArrayInstances = range(0, kinds.length).mapToObj(i -> 
+      findStatic(lookup, SpecializMetaFactory.class, newInstanceNames[i], kinds[i].arrayType, int.class)).toArray(MethodHandle[]::new);
     arrayGets = range(0, kinds.length).mapToObj(i -> 
-      findStatic(Array.class, arrayGetName[i], kinds[i].type, Object.class, int.class)).toArray(MethodHandle[]::new);
-    String[] arraySetName = { "set", "setInt", "setLong", "setFloat", "setDouble" };
+      findStatic(lookup, SpecializMetaFactory.class, "arrayLoad", kinds[i].type, kinds[i].arrayType, int.class)).toArray(MethodHandle[]::new);
     arraySets = range(0, kinds.length).mapToObj(i -> 
-      findStatic(Array.class, arraySetName[i], void.class, Object.class, int.class, kinds[i].type)).toArray(MethodHandle[]::new);
+      findStatic(lookup, SpecializMetaFactory.class, "arrayStore", void.class, kinds[i].arrayType, int.class, kinds[i].type)).toArray(MethodHandle[]::new);
     arrayCopyOfs = range(0, kinds.length).mapToObj(i -> 
-      findStatic(Arrays.class, "copyOf", kinds[i].arrayType, kinds[i].arrayType, int.class)).toArray(MethodHandle[]::new);
+      findStatic(lookup, Arrays.class, "copyOf", kinds[i].arrayType, kinds[i].arrayType, int.class)).toArray(MethodHandle[]::new);
     equals = range(0, kinds.length).mapToObj(i -> 
-      findStatic(SpecializMetaFactory.class, "equals", boolean.class, kinds[i].type, kinds[i].type)).toArray(MethodHandle[]::new);
+      findStatic(lookup, SpecializMetaFactory.class, "equals", boolean.class, kinds[i].type, kinds[i].type)).toArray(MethodHandle[]::new);
   }
   
-  private static MethodHandle findStatic(Class<?> type, String name, Class<?> returnType, Class<?>... parameterTypes) {
+  private static MethodHandle findStatic(Lookup lookup, Class<?> type, String name, Class<?> returnType, Class<?>... parameterTypes) {
     try {
-      return publicLookup().findStatic(type, name, methodType(returnType, parameterTypes));
+      return lookup.findStatic(type, name, methodType(returnType, parameterTypes));
     } catch (NoSuchMethodException | IllegalAccessException e) {
       throw new AssertionError(e);
     }
   }
   
-  public static boolean equals(Object o1, Object o2) {
+  private static int[] newInstanceInt(int capacity) {
+    return new int[capacity];
+  }
+  private static long[] newInstanceLong(int capacity) {
+    return new long[capacity];
+  }
+  private static float[] newInstanceFloat(int capacity) {
+    return new float[capacity];
+  }
+  private static double[] newInstanceDouble(int capacity) {
+    return new double[capacity];
+  }
+  private static Object[] newInstanceObject(int capacity) {
+    return new Object[capacity];
+  }
+  
+  private static int arrayLoad(int[] array, int index) {
+    return array[index];
+  }
+  private static long arrayLoad(long[] array, int index) {
+    return array[index];
+  }
+  private static float arrayLoad(float[] array, int index) {
+    return array[index];
+  }
+  private static double arrayLoad(double[] array, int index) {
+    return array[index];
+  }
+  private static Object arrayLoad(Object[] array, int index) {
+    return array[index];
+  }
+  
+  private static void arrayStore(int[] array, int index, int value) {
+    array[index] = value;
+  }
+  private static void arrayStore(long[] array, int index, long value) {
+    array[index] = value;
+  }
+  private static void arrayStore(float[] array, int index, float value) {
+    array[index] = value;
+  }
+  private static void arrayStore(double[] array, int index, double value) {
+    array[index] = value;
+  }
+  private static void arrayStore(Object[] array, int index, Object value) {
+    array[index] = value;
+  }
+  
+  
+  private static boolean equals(Object o1, Object o2) {
     return Objects.equals(o1, o2);
   }
-  public static boolean equals(int i1, int i2) {
+  private static boolean equals(int i1, int i2) {
     return i1 == i2;
   }
-  public static boolean equals(long l1, long l2) {
+  private static boolean equals(long l1, long l2) {
     return l1 == l2;
   }
-  public static boolean equals(float f1, float f2) {
+  private static boolean equals(float f1, float f2) {
     return f1 == f2;
   }
-  public static boolean equals(double d1, double d2) {
+  private static boolean equals(double d1, double d2) {
     return d1 == d2;
   }
   
@@ -83,7 +130,7 @@ public class SpecializMetaFactory {
     MethodHandle mh;
     switch(name) {
     case "newArrayInstance":
-      mh = MethodHandles.insertArguments(newArrayInstance, 0, kind.type);
+      mh = newArrayInstances[kind.ordinal()];
       break;
     case "arrayGet":
       mh = arrayGets[kind.ordinal()];

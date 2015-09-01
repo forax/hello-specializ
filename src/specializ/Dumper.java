@@ -22,14 +22,13 @@ public class Dumper {
     cw.newUTF8("$(I)[E");    // 2: (I)L[java/lang/Object;
     cw.newUTF8("$E");        // 3: Ljava.lang.Object;
     cw.newUTF8("$(E)V");     // 4: (Ljava/lang/Object;)V
-    cw.newUTF8("$([E)I");    // 5: ([Ljava/lang/Object;)I
-    cw.newUTF8("$([EI)[E");  // 6: (L[java/lang/Object;I)[Ljava/lang/Object;
-    cw.newUTF8("$([EIE)V");  // 7: (L[java/lang/Object;ILjava/lang/Object;)V
-    cw.newUTF8("$(I)E");     // 8: (I)Ljava/lang/Object;
-    cw.newUTF8("$([EI)E");   // 9: (L[java/lang/Object;I)Ljava/lang/Object;
-    cw.newUTF8("$(IE)V");    //10: (ILjava/lang/Object;)V
-    cw.newUTF8("$(E)Z");     //11: (Ljava/lang/Object;)Z
-    cw.newUTF8("$(EE)Z");    //12: (Ljava/lang/Object;Ljava/lang/Object;)Z
+    cw.newUTF8("$([EI)[E");  // 5: (L[java/lang/Object;I)[Ljava/lang/Object;
+    cw.newUTF8("$([EIE)V");  // 6: (L[java/lang/Object;ILjava/lang/Object;)V
+    cw.newUTF8("$(I)E");     // 7: (I)Ljava/lang/Object;
+    cw.newUTF8("$([EI)E");   // 8: (L[java/lang/Object;I)Ljava/lang/Object;
+    cw.newUTF8("$(IE)V");    // 9: (ILjava/lang/Object;)V
+    cw.newUTF8("$(E)Z");     //10: (Ljava/lang/Object;)Z
+    cw.newUTF8("$(EE)Z");    //11: (Ljava/lang/Object;Ljava/lang/Object;)Z
     
     Handle BSM = new Handle(H_INVOKESTATIC, "specializ/java/util/SpecializMetaFactory", "bsm",
         "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;)Ljava/lang/invoke/CallSite;");
@@ -72,7 +71,7 @@ public class Dumper {
       mv.visitCode();
       mv.visitVarInsn(ALOAD, 0);
       mv.visitFieldInsn(GETFIELD, "specializ/java/util/ArrayList", "data", "$[E");
-      mv.visitInvokeDynamicInsn("arrayLength", "$([E)I", BSM, "$E");
+      mv.visitInsn(ARRAYLENGTH);
       mv.visitVarInsn(ALOAD, 0);
       mv.visitFieldInsn(GETFIELD, "specializ/java/util/ArrayList", "size", "I");
       Label l0 = new Label();

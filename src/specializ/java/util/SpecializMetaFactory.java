@@ -36,12 +36,11 @@ public class SpecializMetaFactory {
     }
   }
   
-  private static final MethodHandle newArrayInstance, arrayLength,
+  private static final MethodHandle newArrayInstance,
                                     arrayGets[], arraySets[], arrayCopyOfs[], equals[];
   static {
     newArrayInstance = findStatic(Array.class, "newInstance", Object.class, Class.class, int.class);
-    arrayLength = findStatic(Array.class, "getLength", int.class, Object.class);
-
+    
     VariantKind[] kinds = VariantKind.values();
     String[] arrayGetName = { "get", "getInt", "getLong", "getFloat", "getDouble" };
     arrayGets = range(0, kinds.length).mapToObj(i -> 
@@ -85,9 +84,6 @@ public class SpecializMetaFactory {
     switch(name) {
     case "newArrayInstance":
       mh = MethodHandles.insertArguments(newArrayInstance, 0, kind.type);
-      break;
-    case "arrayLength":
-      mh = arrayLength;
       break;
     case "arrayGet":
       mh = arrayGets[kind.ordinal()];
